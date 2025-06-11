@@ -9,7 +9,147 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      contacts: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          phone: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          phone: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          phone?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      message_sends: {
+        Row: {
+          contact_id: string
+          created_at: string
+          error_message: string | null
+          id: string
+          message_id: string
+          sent_at: string | null
+          status: string
+          whatsapp_message_id: string | null
+        }
+        Insert: {
+          contact_id: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          message_id: string
+          sent_at?: string | null
+          status?: string
+          whatsapp_message_id?: string | null
+        }
+        Update: {
+          contact_id?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          message_id?: string
+          sent_at?: string | null
+          status?: string
+          whatsapp_message_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_sends_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_sends_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          sent_at: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          sent_at?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          sent_at?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      whatsapp_connections: {
+        Row: {
+          access_token_encrypted: string | null
+          business_account_id: string | null
+          created_at: string
+          id: string
+          phone_number: string
+          status: string
+          updated_at: string
+          user_id: string
+          webhook_verify_token: string | null
+        }
+        Insert: {
+          access_token_encrypted?: string | null
+          business_account_id?: string | null
+          created_at?: string
+          id?: string
+          phone_number: string
+          status?: string
+          updated_at?: string
+          user_id: string
+          webhook_verify_token?: string | null
+        }
+        Update: {
+          access_token_encrypted?: string | null
+          business_account_id?: string | null
+          created_at?: string
+          id?: string
+          phone_number?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+          webhook_verify_token?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
