@@ -105,10 +105,19 @@ const CsvUploader: React.FC<CsvUploaderProps> = ({ onContactsUploaded }) => {
     const csvFile = files.find(file => file.type === 'text/csv' || file.name.endsWith('.csv'));
     
     if (csvFile) {
-      const fakeEvent = {
-        target: { files: [csvFile] }
+      // Create a proper event object
+      const input = document.createElement('input');
+      input.type = 'file';
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(csvFile);
+      input.files = dataTransfer.files;
+      
+      const event = {
+        target: input,
+        currentTarget: input
       } as React.ChangeEvent<HTMLInputElement>;
-      handleFileUpload(fakeEvent);
+      
+      handleFileUpload(event);
     }
   }, [handleFileUpload]);
 
