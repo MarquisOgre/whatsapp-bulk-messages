@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Upload, MessageCircle, Download, Users, Send, LogOut, Settings } from 'lucide-react';
+import { Upload, MessageCircle, Download, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -11,6 +11,9 @@ import Auth from '@/components/Auth';
 import MessageComposer from '@/components/MessageComposer';
 import ContactManager from '@/components/ContactManager';
 import WhatsAppConnection from '@/components/WhatsAppConnection';
+import AppHeader from '@/components/AppHeader';
+import StatsCards from '@/components/StatsCards';
+import SendMessageSection from '@/components/SendMessageSection';
 import { Contact } from '@/types/contact';
 
 const Index = () => {
@@ -49,6 +52,8 @@ const Index = () => {
       return;
     }
 
+    if (!user) return;
+
     setIsLoading(true);
     
     try {
@@ -57,7 +62,8 @@ const Index = () => {
         .from('messages')
         .insert({
           content: message,
-          status: 'sending'
+          status: 'sending',
+          user_id: user.id
         })
         .select()
         .single();
@@ -67,7 +73,8 @@ const Index = () => {
       // Get contacts from database
       const { data: dbContacts, error: contactsError } = await supabase
         .from('contacts')
-        .select('*');
+        .select('*')
+        .eq('user_id', user.id);
 
       if (contactsError) throw contactsError;
 
@@ -161,72 +168,8 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 p-4">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <div className="text-center flex-1">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl mb-4 shadow-lg">
-              <MessageCircle className="w-8 h-8 text-white" />
-            </div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
-              WhatsApp Bulk Messenger
-            </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Send personalized WhatsApp messages to up to 1000 contacts at once. Upload your CSV file and reach your audience instantly.
-            </p>
-          </div>
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-600">{user.email}</span>
-            <Button variant="outline" onClick={signOut}>
-              <LogOut className="w-4 h-4 mr-2" />
-              Sign Out
-            </Button>
-          </div>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300">
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-4">
-                <div className="p-3 bg-blue-100 rounded-lg">
-                  <Users className="w-6 h-6 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-gray-900">{contacts.length}</p>
-                  <p className="text-sm text-muted-foreground">Contacts Loaded</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300">
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-4">
-                <div className="p-3 bg-green-100 rounded-lg">
-                  <MessageCircle className="w-6 h-6 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-gray-900">{message.length}</p>
-                  <p className="text-sm text-muted-foreground">Characters</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300">
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-4">
-                <div className="p-3 bg-purple-100 rounded-lg">
-                  <Send className="w-6 h-6 text-purple-600" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-gray-900">1000</p>
-                  <p className="text-sm text-muted-foreground">Max Recipients</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        <AppHeader userEmail={user.email || ''} onSignOut={signOut} />
+        <StatsCards contactsCount={contacts.length} messageLength={message.length} />
 
         {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -310,34 +253,13 @@ const Index = () => {
               </TabsContent>
             </Tabs>
 
-            {/* Send Button */}
-            <Card className="bg-gradient-to-r from-blue-600 to-purple-600 border-0 shadow-lg">
-              <CardContent className="p-6">
-                <Button 
-                  onClick={handleSendMessages}
-                  disabled={isLoading || contacts.length === 0 || !message.trim() || !isWhatsAppConnected}
-                  className="w-full bg-white text-blue-600 hover:bg-gray-50 font-semibold py-6 text-lg"
-                  size="lg"
-                >
-                  {isLoading ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mr-2" />
-                      Sending Messages...
-                    </>
-                  ) : (
-                    <>
-                      <Send className="w-5 h-5 mr-2" />
-                      Send to {contacts.length} Contacts
-                    </>
-                  )}
-                </Button>
-                {!isWhatsAppConnected && contacts.length > 0 && message.trim() && (
-                  <p className="text-white/80 text-sm mt-2 text-center">
-                    Please connect your WhatsApp Business account first
-                  </p>
-                )}
-              </CardContent>
-            </Card>
+            <SendMessageSection
+              onSendMessages={handleSendMessages}
+              isLoading={isLoading}
+              contactsCount={contacts.length}
+              hasMessage={message.trim().length > 0}
+              isWhatsAppConnected={isWhatsAppConnected}
+            />
           </div>
         </div>
       </div>

@@ -1,7 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,16 +19,22 @@ const WhatsAppConnection: React.FC<WhatsAppConnectionProps> = ({ onConnectionCha
   const [connections, setConnections] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
-    fetchConnections();
-  }, []);
+    if (user) {
+      fetchConnections();
+    }
+  }, [user]);
 
   const fetchConnections = async () => {
+    if (!user) return;
+    
     try {
       const { data, error } = await supabase
         .from('whatsapp_connections')
         .select('*')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -43,6 +49,8 @@ const WhatsAppConnection: React.FC<WhatsAppConnectionProps> = ({ onConnectionCha
 
   const handleConnect = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) return;
+    
     setLoading(true);
 
     try {
@@ -53,7 +61,8 @@ const WhatsAppConnection: React.FC<WhatsAppConnectionProps> = ({ onConnectionCha
           phone_number: phoneNumber,
           business_account_id: businessAccountId,
           access_token_encrypted: accessToken, // In production, encrypt this
-          status: 'connected'
+          status: 'connected',
+          user_id: user.id
         });
 
       if (error) throw error;
